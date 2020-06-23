@@ -14,6 +14,7 @@ public class Song {
         this.startTimePoint = findStartTimePoint(this.timingPoints);
         this.endTimePoint = findEndTimePoint(this.timingPoints);
 
+
     }
 
     private float findStartTimePoint(String timingPoints) {
@@ -33,23 +34,31 @@ public class Song {
     private String general;
 
     private String AudioFilename;
-    private String AudioLeadIn;
-    private String PreviewTime;
-    private String countdown;
+    private int AudioLeadIn;
+    private int PreviewTime;
+    private int countdown;
     private String SampleSet;
-    private String StackLeniency;
-    private String Mode;
-    private String LetterboxInBreaks;
-    private String WidescreenStoryboard;
+    private float StackLeniency;
+    private int Mode;
+    private int LetterboxInBreaks;
+
+    private int UseSkinSprites;
+    private String OverlayPosition;
+    private String SkinPreference;
+    private int EpilepsyWarning;
+    private int CountdownOffset;
+    private int SpecialStyle;
+    private int WidescreenStoryboard;
+    private int SamplesMatchPlaybackRate;
 
     // Editor
     private String editor;
 
     private String Bookmarks;
-    private String DistanceSpacing;
-    private String BeatDivisor;
-    private String GridSize;
-    private String TimelineZoom;
+    private float DistanceSpacing;
+    private float BeatDivisor;
+    private int GridSize;
+    private float TimelineZoom;
 
     // Metadata
     private String metadata;
@@ -62,8 +71,8 @@ public class Song {
     private String Version;
     private String Source;
     private String Tags;
-    private String BeatmapID;
-    private String BeatmapSetID;
+    private int BeatmapID;
+    private int BeatmapSetID;
 
     // Difficulty
     private String difficulty;
@@ -77,7 +86,7 @@ public class Song {
 
     // Events
 
-    private String events;
+    private String[] events;
 
     private String background_video;
 
