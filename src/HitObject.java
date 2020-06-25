@@ -1,9 +1,13 @@
 public class HitObject {
-    HitObject(int x, int y, int time, int type, String objectParams, String hitSample){
+    HitObject(){
+
+    }
+    HitObject(int x, int y, int time, int type, int hitSound, String objectParams, String hitSample){
         this.x = x;
         this.y = y;
         this.time = time;
         this.type = type;
+        this.hitSound = hitSound;
         this.objectParams = objectParams;
         this.hitSample = hitSample;
     }
@@ -11,11 +15,14 @@ public class HitObject {
     private int y;
     private int time;
     private int type;
+    private int hitSound;
     private String objectParams;
     private String hitSample;
 
-    @Override
     public String toString(){
-        return String.valueOf(x) + "," + String.valueOf(y) + "," + String.valueOf(time) + "," + String.valueOf(type) + "," + objectParams + "," + hitSample;
+        String finalString = String.valueOf(x) + "," + String.valueOf(y) + "," + String.valueOf(time) + "," + String.valueOf(type) + "," + String.valueOf(hitSound);
+        if(!objectParams.equals("")) finalString += "," + objectParams;
+        if(!hitSample.equals("")) finalString += hitSample;
+        return finalString;
     }
 }

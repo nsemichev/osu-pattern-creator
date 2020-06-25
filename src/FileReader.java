@@ -10,11 +10,15 @@ public class FileReader {
         try{
             File file = new File(filename);
             Scanner sc = new Scanner(file);
-            while (sc.hasNextLine())
-                text += sc.nextLine() + "\n";
+            while (sc.hasNextLine()) {
+                String next = sc.nextLine();
+                if(next.startsWith("//")) continue;
+                else text += next + "\n";
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return null;
+            System.out.println("File was not found.");
+            System.exit(0);
         }
         return extractSongParameters(text);
     }
@@ -40,15 +44,7 @@ public class FileReader {
         // Fill all the required parts in the file
         try{
             FileWriter writer = new FileWriter(filename);
-            writer.write(song.getFormat() + "\n\n");
-            writer.write(song.getGeneral() + "\n\n");
-            writer.write(song.getEditor() + "\n\n");
-            writer.write(song.getMetadata() + "\n\n");
-            writer.write(song.getDifficulty() + "\n\n");
-            writer.write(song.getEvents() + "\n\n");
-            writer.write(song.getTimingPoints() + "\n\n");
-            writer.write(song.getColors() + "\n\n");
-            writer.write(song.getObjects() + "\n\n");
+            writer.write(song.toString());
             writer.close();
             System.out.println("Wrote file successfully.");
         } catch(IOException e) {

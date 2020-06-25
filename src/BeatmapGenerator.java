@@ -1,66 +1,99 @@
 import java.util.*;
 public class BeatmapGenerator {
     BeatmapGenerator(Song song){
+        this.song = song;
         this.songBPM = song.getBPM();
         this.halfTick = 60000 / (2 * this.songBPM);
         this.quarterTick = 60000 / (4 * this.songBPM);
         this.startTimePoint = song.getStartTimePoint();
         this.endTimePoint = song.getEndTimePoint();
     }
-    private int max_x = 512;
-    private int max_y = 384;
-    private float songBPM;
-    private float halfTick;
-    private float quarterTick;
-    private float startTimePoint;
-    private float endTimePoint;
 
-    private int linearStackSpacing = 25;
+    private final int max_x = 512;
+    private final int max_y = 384;
 
-    public String generateBeatmap(String type){
-        if(type.contains("RS")){
-            return randomStack(Integer.parseInt(type.substring(2)));
-        }
-        if(type.contains("LS")){
-            String[] params = type.split(",");
-            return linearStack(Integer.parseInt(params[1]), Integer.parseInt(params[2]));
+    private Song song;
+    private double songBPM;
+    private double halfTick;
+    private double quarterTick;
+    private double startTimePoint;
+    private double endTimePoint;
+
+    private int linearStackSpacing = 10;
+
+    public List<HitObject> generateBeatmap(String config){
+        String[] configParts = config.split("\\|");
+        String[] typeParts = configParts[0].split(",");
+        String[] difficultyOverride = configParts[1].split(",");
+        String difficultyName = configParts[2];
+        setDifficulty(difficultyOverride);
+        setDifficultyName(difficultyName);
+
+        if(typeParts[0].equals("RS")){
+            return randomStack(Integer.parseInt(typeParts[1]), Integer.parseInt(typeParts[2]), typeParts[3]);
         }
         else {
             System.out.println("Unrecognized type.");
             System.exit(0);
         }
-        return "";
+        return null;
     }
 
-    private String randomStack(int num){
-        float curTime = startTimePoint;
-        String objects = "[HitObjects]\n";
+    private void setDifficultyName(String name){
+        BeatmapComponent[] songComponents = song.getBeatmapComponents();
+        MetadataComponent metadataComponent = (MetadataComponent) songComponents[2];
+        metadataComponent.setVersion(name);
+    }
+
+    private void setDifficulty(String[] difficulty){
+        BeatmapComponent[] songComponents = song.getBeatmapComponents();
+        DifficultyComponent difficultyComponent = (DifficultyComponent) songComponents[3];
+        difficultyComponent.setHPDrainRate(Double.parseDouble(difficulty[0]));
+        difficultyComponent.setCircleSize(Double.parseDouble(difficulty[1]));
+        difficultyComponent.setOverallDifficulty(Double.parseDouble(difficulty[2]));
+        difficultyComponent.setApproachRate(Double.parseDouble(difficulty[3]));
+    }
+
+    private List<HitObject> randomStack(int num, int spacing, String type) {
+        double curTime = startTimePoint;
+        List<HitObject> hitObjects = new ArrayList<HitObject>();
+        //String objects = "[HitObjects]\n";
         int curCombo = 0;
         while(curTime < endTimePoint){
             //if(curTime + halfTick + (num - 1) * quarterTick > endTimePoint) break;
-            float[] timings = generateTimingPattern(curTime, num);
-            Random random = new Random();
-            int x_coord = random.nextInt(max_x-20)+10;
-            int y_coord = random.nextInt(max_y-20)+10;
-            for(int i = 0; i < num; i++){
-                if(i == 0 && curCombo + num > 16){
-                    objects += String.valueOf(x_coord) + "," + String.valueOf(y_coord) + "," + String.valueOf((int) timings[i]) + ",5,0" + "\n";
-                    curCombo = 0;
+            double[] timings = generateTimingPattern(curTime, num);
+            if(type.equals("normal")) {
+                Random random = new Random();
+                int x_coord = random.nextInt(max_x - 20) + 10;
+                int y_coord = random.nextInt(max_y - 20) + 10;
+                for (int i = 0; i < num; i++) {
+                    if (i == 0 && curCombo + num > 16) {
+                        hitObjects.add(new HitCircle(x_coord, y_coord, (int) timings[i], 5, 0,"", ""));
+                        //objects += String.valueOf(x_coord) + "," + String.valueOf(y_coord) + "," + String.valueOf((int) timings[i]) + ",5,0" + "\n";
+                        curCombo = 0;
+                    } else hitObjects.add(new HitCircle(x_coord, y_coord, (int) timings[i], 1, 0,"", ""));
+                    //objects += String.valueOf(x_coord) + "," + String.valueOf(y_coord) + "," + String.valueOf((int) timings[i]) + ",1,0" + "\n";
                 }
-                else objects += String.valueOf(x_coord) + "," + String.valueOf(y_coord) + "," + String.valueOf((int) timings[i]) + ",1,0" + "\n";
+            }
+            else if(type.equals("linear")) {
+                return linearStack(num, spacing);
+            }
+            else{
+                System.out.println("Invalid type: " + type);
             }
             curTime += halfTick + (num - 1) * quarterTick;
             curCombo += num;
         }
-        return objects;
+        return hitObjects;
     }
 
-    private String linearStack(int num, int spacing){
+    private List<HitObject> linearStack(int num, int spacing){
+        List<HitObject> hitObjects = new ArrayList<HitObject>();
         Random random = new Random();
         int start_x = random.nextInt(max_x-20)+10;
         int start_y = random.nextInt(max_y-20)+10;
-        float curTime = startTimePoint;
-        String objects = "[HitObjects]\n";
+        double curTime = startTimePoint;
+        //String objects = "[HitObjects]\n";
         int lastDir = 0; // -1 = N -2 = E 1 = S 2 = W
         int cur_x = start_x;
         int cur_y = start_y;
@@ -69,7 +102,7 @@ public class BeatmapGenerator {
             int randNum = random.nextInt(num) + 1;
             if (randNum % 2 == 0) randNum += 1;
             //if(curTime + halfTick + (num - 1) * quarterTick > endTimePoint) break;
-            float[] timings = generateTimingPattern(curTime, randNum);
+            double[] timings = generateTimingPattern(curTime, randNum);
             int[] x_coords = new int[randNum];
             int[] y_coords = new int[randNum];
 
@@ -103,14 +136,14 @@ public class BeatmapGenerator {
                 y_coords[i] = y_coords[i-1] + incrY * linearStackSpacing;
             }
 
-
-
             for(int i = 0; i < randNum; i++){
                 if(i == 0 && curCombo + randNum > 16) {
-                    objects += String.valueOf(x_coords[i]) + "," + String.valueOf(y_coords[i]) + "," + String.valueOf((int) timings[i]) + ",5,0" + "\n";
+                    //objects += String.valueOf(x_coords[i]) + "," + String.valueOf(y_coords[i]) + "," + String.valueOf((int) timings[i]) + ",5,0" + "\n";
+                    hitObjects.add(new HitCircle(x_coords[i], y_coords[i], (int) timings[i], 5, 0, "", ""));
                     curCombo = 0;
                 }
-                else objects += String.valueOf(x_coords[i]) + "," + String.valueOf(y_coords[i]) + "," + String.valueOf((int) timings[i]) + ",1,0" + "\n";
+                else hitObjects.add(new HitCircle(x_coords[i], y_coords[i], (int) timings[i], 1, 0, "", ""));
+                //else objects += String.valueOf(x_coords[i]) + "," + String.valueOf(y_coords[i]) + "," + String.valueOf((int) timings[i]) + ",1,0" + "\n";
             }
 
             curTime += halfTick + (randNum - 1) * quarterTick;
@@ -119,7 +152,7 @@ public class BeatmapGenerator {
             cur_y = y_coords[randNum-1];
             curCombo += randNum;
         }
-        return objects;
+        return hitObjects;
     }
 
     private int chooseDir(int lastDir, int spacing, int x_coord, int y_coord, int num){
@@ -146,8 +179,8 @@ public class BeatmapGenerator {
         }
     }
 
-    private float[] generateTimingPattern(float curTime, int num){
-        float[] timings = new float[num];
+    private double[] generateTimingPattern(double curTime, int num){
+        double[] timings = new double[num];
         timings[0] = curTime + halfTick;
         for(int i = 1; i < num; i++){
             timings[i] = timings[i-1] + quarterTick;
